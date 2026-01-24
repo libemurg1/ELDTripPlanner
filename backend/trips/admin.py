@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Trip, RouteStop, LogSheet, LogEntry
+
+from .models import LogEntry, LogSheet, RouteStop, Trip
 
 
 @admin.register(Trip)

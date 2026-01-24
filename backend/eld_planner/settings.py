@@ -10,23 +10,35 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Use BigAutoField as default primary key type
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-zb57r6kyuuj0$ohl(=ec$x!%y34a69&2c-7rcs6&##a2)c1%fi"
+SECRET_KEY = config(
+    "SECRET_KEY",
+    default=os.environ.get("DJANGO_SECRET_KEY", "insecure-change-me-in-production"),
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS",
+    default="localhost,127.0.0.1,testserver",
+    cast=lambda v: [s.strip() for s in v.split(",")],
+)
 
 
 # Application definition
@@ -57,7 +69,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "trips.cache.CacheMiddleware",
+    "cache.CacheMiddleware",
 ]
 
 ROOT_URLCONF = "eld_planner.urls"
@@ -150,13 +162,22 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "VERIFYING_KEY": None,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
 }
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+CORS_ALLOWED_ORIGINS = config(
+    "CORS_ALLOWED_ORIGINS",
+    default="http://localhost:3000,http://localhost:5173",
+    cast=lambda v: [s.strip() for s in v.split(",") if v],
+)
 
 # Spectacular (API Docs) Configuration
 SPECTACULAR_SETTINGS = {
@@ -166,56 +187,32 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
+
 # Cache Configuration
-CACHES = {
-    "default": {
+# Redis cache configuration with fallback
+def get_redis_cache_config(db_num: int, key_prefix: str, timeout: int = 300):
+    """Get Redis cache configuration with fallback to local memory cache."""
+    return {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/0"),
+        "LOCATION": f"redis://127.0.0.1:6379/{db_num}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PARSER_CLASS": "django_redis.connection.DefaultParser",
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
-            "RETRY_ON_TIMEOUT": True,
-            "MAX_CONNECTIONS": 1000,
-            "CONNECTION_POOL_KWARGS": {
-                "max_connections": 50,
-                "retry_on_timeout": True,
-            },
+            "IGNORE_EXCEPTIONS": True,  # Ignore Redis connection errors
+            "SOCKET_CONNECT_TIMEOUT": 1,  # Fast timeout for Redis unavailability
+            "SOCKET_TIMEOUT": 1,
         },
-        "KEY_PREFIX": "eld_planner",
-        "TIMEOUT": 300,  # 5 minutes default
-    },
-    "sessions": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/1"),
-        "KEY_PREFIX": "session",
-        "TIMEOUT": 86400,  # 24 hours
-    },
-    "api_responses": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/2"),
-        "KEY_PREFIX": "api_response",
-        "TIMEOUT": 300,  # 5 minutes
-    },
-    "trip_plans": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/3"),
-        "KEY_PREFIX": "trip_plan",
-        "TIMEOUT": 86400,  # 24 hours
-    },
-    "geocoded_addresses": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/4"),
-        "KEY_PREFIX": "geocoded",
-        "TIMEOUT": 604800,  # 7 days
-    },
-    "user_stats": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/5"),
-        "KEY_PREFIX": "user_stats",
-        "TIMEOUT": 3600,  # 1 hour
-    },
+        "KEY_PREFIX": key_prefix,
+        "TIMEOUT": timeout,
+    }
+
+
+CACHES = {
+    "default": get_redis_cache_config(0, "eld_planner", 300),
+    "sessions": get_redis_cache_config(1, "session", 86400),
+    "api_responses": get_redis_cache_config(2, "api_response", 300),
+    "trip_plans": get_redis_cache_config(3, "trip_plan", 86400),
+    "geocoded_addresses": get_redis_cache_config(4, "geocoded", 604800),
+    "user_stats": get_redis_cache_config(5, "user_stats", 3600),
 }
 
 # Celery Configuration
@@ -261,7 +258,7 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 # Session Configuration
-SESSION_ENGINE = "django.contrib.sessions.backends.cache.SessionCache"
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "sessions"
 
 # Cache timeouts (seconds)

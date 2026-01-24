@@ -1,60 +1,355 @@
-# ELD Trip Planner
+# ELD Trip Planner 🚚
 
-A comprehensive truck trip planning and Electronic Logging Device (ELD) log generation system built with Django REST API (backend) and React + Vite + TailwindCSS (frontend).
+A professional truck trip planning and Electronic Logging Device (ELD) log generation system built with modern technologies. Complies with FMCSA Hours of Service regulations for commercial drivers.
 
-## Features
+## ✨ Key Features
+
+### 🎯 Core Functionality
+- **📍 Intelligent Trip Planning**: Calculate optimal routes with fuel stops and rest breaks
+- **📊 ELD Log Generation**: Automated FMCSA-compliant electronic log sheets
+- **🗺️ Interactive Route Visualization**: Real-time maps with stop locations and progress tracking
+- **📋 Professional Log Sheets**: Canvas-based ELD logs with PDF export capabilities
+- **🔐 Secure Authentication**: JWT-based user management with role-based access
+- **📱 Mobile-Responsive**: Works seamlessly on all devices and screen sizes
+
+### 🛠️ Advanced Features
+- **🚦 Real-Time Location Tracking**: Live GPS monitoring and route progress
+- **📊 Analytics Dashboard**: Trip statistics, hours compliance, and performance metrics
+- **🌤️ Customizable Rules**: Configurable HOS rules for different operational needs
+- **📄 Export Functionality**: Generate PDF reports for compliance and record-keeping
+- **🔔 Notification System**: Real-time alerts for route changes and compliance issues
+
+## 🏗️ Architecture Overview
 
 ### Backend (Django REST Framework)
-- **Trip Planning**: Complete trip planning with route calculation
-- **ELD Log Generation**: Automated ELD log sheets following FMCSA Hours of Service rules
-- **Route Optimization**: Fuel stops every 1,000 miles, rest stops per HOS rules
-- **JWT Authentication**: Secure token-based authentication
-- **API Documentation**: Auto-generated Swagger/OpenAPI docs
-- **PostgreSQL Database**: Robust data persistence
+- **🚀 Django 4.2.16** with Django REST Framework 3.14.0
+- **🗄️ PostgreSQL** database with optimized queries and migrations
+- **🔐 JWT Authentication** via djangorestframework-simplejwt 5.2.2
+- **📡 API Documentation**: Auto-generated Swagger/OpenAPI with drf-spectacular
+- **🛢️ Background Tasks**: Celery with Redis for asynchronous processing
+- **🌍 CORS Support**: Configured for cross-origin requests
+- **📡 Monitoring**: Health checks and metrics collection
 
-### Frontend (React + Vite + TailwindCSS)
-- **Trip Input Forms**: Intuitive forms for trip planning
-- **Interactive Maps**: Route visualization with Leaflet.js + OpenRouteService
-- **ELD Log Visualization**: Canvas API for professional log sheet rendering
-- **Responsive Design**: Mobile-first TailwindCSS styling
+### Frontend (React + TypeScript)
+- **⚛️ React 18.2.0** with modern hooks and patterns
+- **📘 TypeScript**: Complete type safety and IntelliSense support
+- **⚡ Vite 4.5.14** for lightning-fast development
+- **🎨 TailwindCSS 3.4.0** with custom design system
+- **🧭 React Router 6.8.0** for navigation
+- **📊 Axios** with automatic token refresh
+- **🗺️ Enhanced Leaflet**: Custom markers, animated routes, real-time tracking
 
-### Deployment
-- **Docker Compose**: Local development with backend, frontend, PostgreSQL, Nginx
-- **Terraform + GCP**: Cloud deployment ready (Phase 2)
+### Infrastructure & DevOps
+- **🐳 Docker**: Multi-service containerization with health checks
+- **🔄 Docker Compose**: Local development orchestration
+- **🌐 Nginx**: Production-ready reverse proxy with SSL termination
+- **📊 Redis**: High-performance caching and session storage
+- **🔄 Celery**: Distributed task queue for background processing
 
-## Hours of Service Rules Implemented
+## ⚖️ Compliance Features
 
-- Property-carrying driver limits
-- 70 hours maximum in 8-day cycle
-- 11 hours driving maximum per day
-- 14 hours on-duty maximum per day
-- 30-minute break after 8 hours of driving
-- 10-hour minimum rest period
-- 34-hour restart capability
+### FMCSA Hours of Service (HOS) Rules
+- **✅ Property-Carrying Driver**: 70 hours maximum in 8-day cycle
+- **✅ Daily Driving Limit**: 11 hours maximum per day
+- **✅ Daily On-Duty Limit**: 14 hours maximum per day
+- **✅ 30-Minute Break**: Required after 8 hours of consecutive driving
+- **✅ 34-Hour Restart**: Reset driving hours after 34 consecutive hours off-duty
+- **✅ Fuel Stop Requirements**: Every 1,000 miles or as needed
+- **✅ Pick/Drop Times**: 1 hour allocated for pickup and dropoff activities
 
-## Tech Stack
+### ELD Log Features
+- **📊 Graphical Timeline**: 24-hour grid with 15-minute intervals
+- **🎨 Color-Coded Status**: Visual representation of duty status changes
+- **📋 Detailed Remarks**: Location and activity annotations
+- **📄 PDF Generation**: Professional printable log sheets
+- **📊 Compliance Checking**: Automatic violation detection and alerts
 
-### Backend
-- **Django 6.0.1** with Django REST Framework
-- **PostgreSQL** database with psycopg2
-- **JWT Authentication** via djangorestframework-simplejwt
-- **CORS Support** with django-cors-headers
-- **API Documentation** with drf-spectacular
-- **Route Calculation** with OpenRouteService API integration
+## 🛠️ API Endpoints
 
-### Frontend
-- **React** with Vite for fast development
-- **TailwindCSS** for utility-first styling
-- **Axios** for API communication
-- **React Router** for navigation
-- **Leaflet.js** + React-Leaflet for mapping
-- **Canvas API** for ELD log visualization
+### Authentication (`/api/auth/`)
+- `POST /register/` - User registration with validation
+- `POST /login/` - Secure user authentication
+- `GET /profile/` - User profile management
+- `PUT /profile/update/` - Profile updates
+- `POST /token/refresh/` - JWT token renewal
+- `POST /logout/` - Session termination
 
-### Infrastructure
-- **Docker** & Docker Compose
-- **Nginx** reverse proxy
-- **Terraform** (Phase 2)
-- **Google Cloud Platform** (Phase 2)
+### Trip Management (`/api/`)
+- `GET /` - List user trips with pagination
+- `POST /` - Create new trip with validation
+- `GET /{id}/` - Retrieve trip details
+- `PUT /{id}/` - Update trip information
+- `DELETE /{id}/` - Remove trip
+- `POST /plan/` - Generate complete trip with ELD logs
+
+### Advanced Features (`/api/`)
+- `GET /{trip_id}/logs/` - Retrieve trip log sheets
+- `GET /{trip_id}/stops/` - Get route stops and waypoints
+- `POST /download-eld/` - Generate ELD PDF reports
+- `POST /generate-hos-report/` - Create HOS compliance reports
+
+### Real-Time Tracking (`/api/tracking/`)
+- `POST /start/` - Begin tracking session
+- `POST /stop/` - End tracking session
+- `GET /session/{trip_id}/` - Get current session info
+- `POST /location/` - Update current location
+- `GET /progress/{trip_id}/` - Route progress metrics
+- `GET /history/{trip_id}/` - Location history trail
+
+## 🎨 Frontend Components
+
+### Core Components
+- **EnhancedRouteMap**: Interactive mapping with real-time tracking
+- **ELDLogSheet**: Professional canvas-based log visualization
+- **TripForm**: Intuitive trip planning interface
+- **TripDetailsService**: Comprehensive trip information modal
+- **NavigationHeader**: Responsive application header
+- **Dashboard**: Analytics and trip overview
+
+### UI/UX Features
+- **🎨 Professional Design**: Clean, modern interface with consistent theming
+- **📱 Mobile-First**: Optimized for all device sizes
+- **⚡ Performance**: Lazy loading, code splitting, memoization
+- **♿ Accessibility**: ARIA labels and keyboard navigation
+- **🔔 Error Handling**: Graceful error boundaries and user feedback
+- **⏳ Loading States**: Professional loading indicators and skeleton screens
+
+## 🐳 Development Setup
+
+### Quick Start
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd eld-trip-planner
+
+# 2. Environment setup
+cp backend/.env.example backend/.env
+# Edit .env with your settings
+
+# 3. Start with Docker Compose
+docker-compose up --build
+
+# 4. Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000/api
+# API Documentation: http://localhost:8000/api/docs
+# Admin Panel: http://localhost:8000/admin
+```
+
+### Development Services
+- **🗄️ PostgreSQL**: Database on port 5432
+- **🔴 Redis**: Cache and message broker on port 6379
+- **🔵 Backend**: Django server on port 8000
+- **🟢 Frontend**: React dev server on port 3000
+- **🟡 Nginx**: Reverse proxy on port 80
+
+## 📊 Technology Stack
+
+### Backend Dependencies
+```
+Django==4.2.16
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
+psycopg2-binary==2.9.7
+redis==4.6.0
+celery==5.2.7
+drf-spectacular==0.26.5
+reportlab==4.0.7  # PDF generation
+```
+
+### Frontend Dependencies
+```
+react==18.2.0
+typescript==4.9.0
+vite==4.5.14
+tailwindcss==3.4.0
+react-leaflet==4.2.1
+axios==1.6.0
+react-router-dom==6.8.0
+```
+
+## 🧪 Testing & Quality
+
+### Code Quality Tools
+```bash
+# Backend
+black --check .                    # Code formatting
+isort --check-only .               # Import sorting
+flake8 .                         # Linting
+mypy .                            # Type checking
+pre-commit run --all-files        # Git hooks
+
+# Frontend
+npm run lint                      # ESLint checking
+npm run type-check                 # TypeScript compilation
+npm run format                     # Prettier formatting
+npm run test                       # Unit tests
+```
+
+### Testing Framework
+- **Backend**: pytest with fixtures and coverage
+- **Frontend**: Jest with React Testing Library
+- **Integration**: API endpoint testing
+- **E2E**: Browser automation tests
+
+## 🚀 Production Deployment
+
+### Docker Configuration
+```yaml
+services:
+  backend:
+    image: eld-planner-backend:latest
+    environment:
+      - DEBUG=False
+      - DB_HOST=${DB_HOST}
+      - REDIS_URL=${REDIS_URL}
+    restart: unless-stopped
+
+  frontend:
+    image: eld-planner-frontend:latest
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+```
+
+### Cloud Deployment Options
+- **Google Cloud Platform**: Terraform configuration available
+- **AWS ECS**: Container orchestration
+- **Azure Container Instances**: Managed deployment
+- **DigitalOcean App Platform**: Simple deployment
+
+## 📈 Performance Features
+
+### Backend Optimizations
+- **🗄️ Database Indexing**: Optimized queries with proper indexes
+- **🔄 Redis Caching**: Session and query result caching
+- **⚡ Async Processing**: Celery for background tasks
+- **📊 Connection Pooling**: Database connection optimization
+
+### Frontend Optimizations
+- **📦 Code Splitting**: Lazy loading for optimal bundle sizes
+- **🧠 React.memo**: Component memoization for performance
+- **⚡ React.lazy**: Dynamic imports for reduced initial load
+- **🎨 CSS-in-JS**: Optimized Tailwind CSS usage
+
+## 🔧 Configuration
+
+### Environment Variables
+```bash
+# Backend (.env)
+SECRET_KEY=your-secure-secret-key
+DEBUG=False
+DB_HOST=your-db-host
+DB_NAME=eld_planner
+DB_USER=postgres
+DB_PASSWORD=your-db-password
+OPENROUTESERVICE_API_KEY=your-api-key
+
+# Frontend (.env)
+VITE_API_URL=https://your-api-domain.com/api
+```
+
+### Customization Options
+- **🎨 Theme Configuration**: Customizable colors and branding
+- **⚖️ Business Rules**: Configurable HOS parameters
+- **🌍 Localization**: Multi-language support ready
+- **📧 Feature Flags**: Toggle features for different deployments
+
+## 🤝 Contributing
+
+### Development Workflow
+1. **🍴 Create Feature Branch**: `git checkout -b feature/your-feature`
+2. **🧪 Run Tests**: Ensure all tests pass before committing
+3. **📝 Follow Standards**: Code must pass linting and formatting checks
+4. **📋 Update Documentation**: Keep README and API docs current
+5. **🔄 Pull Request**: Submit with clear description and tests
+
+### Code Standards
+- **PEP 8**: Python code style compliance
+- **TypeScript**: Strict type checking enforced
+- **ESLint**: JavaScript/TypeScript linting rules
+- **Prettier**: Consistent code formatting
+- **Pre-commit Hooks**: Automated quality checks
+
+## 📄 Documentation
+
+### Available Documentation
+- **📖 README**: This file with setup and usage information
+- **📚 API Documentation**: Auto-generated at `/api/docs`
+- **🔧 Configuration Guide**: Environment and deployment options
+- **🧪 Testing Guide**: Unit and integration testing procedures
+- **🚀 Deployment Guide**: Production deployment instructions
+
+## 🛡️ Security
+
+### Security Features
+- **🔐 JWT Authentication**: Secure token-based authentication
+- **🔒 HTTPS Enforced**: SSL/TLS required in production
+- **🛡️ CSRF Protection**: Cross-site request forgery prevention
+- **🔒 Rate Limiting**: API abuse prevention
+- **📊 Audit Logging**: Comprehensive security event tracking
+
+### Best Practices
+- **🔑 Secret Management**: Secure environment variable handling
+- **🔒 Input Validation**: Comprehensive request validation
+- **🛡️ SQL Injection Protection**: ORM-based query building
+- **🌐 CORS Configuration**: Proper cross-origin handling
+- **📊 Security Headers**: CSP, HSTS, and other security headers
+
+## 📞 Support
+
+### Get Help
+- **🐛 Issue Reporting**: Create GitHub issues for bugs or features
+- **💬 Community Forum**: Discussion and Q&A platform
+- **📧 Email Support**: Direct support for enterprise customers
+- **📖 Wiki**: Detailed documentation and guides
+
+### Issue Template
+```markdown
+## Bug Description
+**Steps to Reproduce**
+1. Go to...
+2. Click on...
+3. See error...
+
+**Expected Behavior**
+What should happen...
+
+**Actual Behavior**
+What actually happened...
+
+**Environment**
+- OS:
+- Browser:
+- Version:
+
+**Additional Context**
+Any other relevant information...
+```
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **OpenStreetMap**: For providing excellent map tiles
+- **Leaflet.js**: For the interactive mapping library
+- **OpenRouteService**: For route calculation API
+- **React Community**: For the amazing React ecosystem
+- **Django Team**: For the excellent web framework
+
+---
+
+**📊 Current Status**: ✅ Production Ready with comprehensive ELD compliance and professional features.
+
+**🚀 Ready to deploy** for commercial trucking companies and independent owner-operators.
 
 ## Quick Start
 

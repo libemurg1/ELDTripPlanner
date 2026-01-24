@@ -1,6 +1,6 @@
+from django.conf import settings
 from django.core.cache import cache
 from django.core.cache.backends.redis import RedisCache
-from django.conf import settings
 
 
 class TripPlanCache:
@@ -105,7 +105,7 @@ class CacheMiddleware:
         # Only cache GET requests to API endpoints
         if (
             request.method == "GET"
-            and request.path.startswith("/api/")
+            and request.path.startswith("/api/v1/")
             and not request.user.is_authenticated
         ):
             # Generate cache key based on URL and query parameters
@@ -120,7 +120,7 @@ class CacheMiddleware:
         # Cache successful GET API responses
         if (
             request.method == "GET"
-            and request.path.startswith("/api/")
+            and request.path.startswith("/api/v1/")
             and response.status_code == 200
             and not getattr(response, "streaming", False)
         ):
@@ -136,7 +136,7 @@ def invalidate_trip_cache(trip_id):
 
     # Invalidate user stats if we can determine the user
     try:
-        from .models import Trip
+        from trips.models import Trip
 
         trip = Trip.objects.get(id=trip_id)
         trip_cache.invalidate_user_cache(trip.user.id)
@@ -150,8 +150,9 @@ def warm_cache_on_startup():
     Called when application starts
     """
     from django.contrib.auth.models import User
-    from .models import Trip
-    from .tasks import warm_popular_cache
+
+    from trips.models import Trip
+    from trips.tasks import warm_popular_cache
 
     # Warm popular routes cache
     warm_popular_cache.delay()
@@ -163,7 +164,7 @@ def warm_cache_on_startup():
 
     for trip in recent_trips:
         # This will trigger caching logic
-        from .tasks import calculate_trip_route
+        from trips.tasks import calculate_trip_route
 
         calculate_trip_route.delay(
             trip.id,

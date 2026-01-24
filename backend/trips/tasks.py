@@ -1,11 +1,14 @@
-import time
 import hashlib
+import time
 from datetime import datetime, timedelta
+
 from celery import shared_task
-from django.core.cache import cache
 from django.conf import settings
-from .models import Trip, LogSheet, RouteStop
-from .services import TripPlanningService, ELDLogService
+from django.core.cache import cache
+from django.db.models import Sum
+
+from .models import LogSheet, RouteStop, Trip
+from .services import ELDLogService, TripPlanningService
 
 
 @shared_task(bind=True, name="trips.calculate_trip_route")
@@ -151,12 +154,12 @@ def generate_trip_report(trip_id, report_type="pdf"):
                 "current_location": trip.current_location,
                 "pickup_location": trip.pickup_location,
                 "dropoff_location": trip.dropoff_location,
-                "total_distance": float(trip.total_distance)
-                if trip.total_distance
-                else 0,
-                "estimated_duration": float(trip.estimated_duration)
-                if trip.estimated_duration
-                else 0,
+                "total_distance": (
+                    float(trip.total_distance) if trip.total_distance else 0
+                ),
+                "estimated_duration": (
+                    float(trip.estimated_duration) if trip.estimated_duration else 0
+                ),
                 "status": trip.status,
             },
             "stops": [
@@ -254,7 +257,7 @@ def warm_popular_cache():
                 ).count()
 
                 total_distance = (
-                    user.trips.aggregate(total_distance=models.Sum("total_distance"))[
+                    user.trips.aggregate(total_distance=Sum("total_distance"))[
                         "total_distance"
                     ]
                     or 0

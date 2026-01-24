@@ -1,6 +1,7 @@
-from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Trip, RouteStop, LogSheet, LogEntry
+from rest_framework import serializers
+
+from .models import LogEntry, LogSheet, RouteStop, Trip
 
 
 class UserSerializer(serializers.ModelSerializer):

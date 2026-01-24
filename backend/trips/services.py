@@ -1,9 +1,11 @@
-import requests
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
+
+import requests
 from django.conf import settings
-from .models import Trip, RouteStop, LogSheet, LogEntry
+
+from .models import LogEntry, LogSheet, RouteStop, Trip
 
 
 class RouteCalculationService:

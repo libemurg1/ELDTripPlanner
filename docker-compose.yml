@@ -14,6 +14,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - eld_network
 
   redis:
     image: redis:7-alpine
@@ -27,6 +29,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - eld_network
 
   backend:
     build:
@@ -42,10 +46,12 @@ services:
       - DB_NAME=eld_planner
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+      - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - DEBUG=True
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-development-key-change-in-production}
     depends_on:
       db:
         condition: service_healthy
@@ -55,6 +61,8 @@ services:
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
              python manage.py runserver 0.0.0.0:8000"
+    networks:
+      - eld_network
 
   celery:
     build:
@@ -67,15 +75,19 @@ services:
       - DB_NAME=eld_planner
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+      - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-development-key-change-in-production}
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     command: celery -A eld_planner worker --loglevel=info --concurrency=2
+    networks:
+      - eld_network
 
   celery-beat:
     build:
@@ -88,15 +100,19 @@ services:
       - DB_NAME=eld_planner
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+      - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-development-key-change-in-production}
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     command: celery -A eld_planner beat --loglevel=info
+    networks:
+      - eld_network
 
   frontend:
     build:
@@ -105,7 +121,9 @@ services:
     volumes:
       - frontend_build:/app/dist
     environment:
-      - VITE_API_URL=http://localhost/api
+      - VITE_API_URL=http://localhost/api/v1
+    networks:
+      - eld_network
 
   nginx:
     image: nginx:alpine
@@ -118,6 +136,12 @@ services:
     depends_on:
       - backend
       - frontend
+    networks:
+      - eld_network
+
+networks:
+  eld_network:
+    driver: bridge
 
 volumes:
   postgres_data:
